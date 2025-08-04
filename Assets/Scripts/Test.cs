@@ -118,7 +118,7 @@ public class Test : MonoBehaviour
                 regions.Add(region);
             }
 
-            for (int i = 0; i < regions.Count; i++)
+            for (int i = 1; i < regions.Count; i++)
             {
                 Color color = new Color(Random.Range(0f, 1f), Random.Range(0f, 1f), Random.Range(0f, 1f));
 
