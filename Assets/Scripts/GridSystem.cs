@@ -73,11 +73,28 @@ public class GridSystem : MonoBehaviour
     {
         Gizmos.DrawWireCube(transform.position, new Vector3(horizontalLength, 1, verticalLength));
     }
+    /// <summary>
+    /// Tüm node'lar dolu mu kontrol eder
+    /// </summary>
+    public bool AreAllNodesFull()
+    {
+        for (int i = 0; i < grid.GetLength(0); i++)
+        {
+            for (int j = 0; j < grid.GetLength(1); j++)
+            {
+                if (grid[i, j].IsEmpty())
+                {
+                    return false; // En az bir node boþ bulundu
+                }
+            }
+        }
+        return true; // Tüm node'lar dolu
+    }
 }
 
 public class Node
 {
-    private bool isEmpty;
+    private bool isEmpty=true;
     private Vector3 position;
     public Vector2Int coordinates;
 
@@ -95,5 +112,14 @@ public class Node
     {
         this.position = position;
         coordinates = new Vector2Int(x, y);
+    }
+    public bool IsEmpty()
+    {
+        return isEmpty;
+    }
+
+    public void SetEmpty(bool boolean)
+    {
+        this.isEmpty = boolean;
     }
 }
