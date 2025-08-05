@@ -17,7 +17,7 @@ public class GridSystem : MonoBehaviour
 
     public Node[,] grid;
 
-    private void Awake()
+    public virtual void Awake()
     {
         instance = this;
         CreateGrid();
