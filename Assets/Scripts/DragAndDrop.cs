@@ -22,9 +22,14 @@ public class DragAndDrop : MonoBehaviour
     private List<Node> previouslyOccupiedNodes = new List<Node>();
     private GridSystem currentGrid; // Hangi grid'de olduðumuzu takip eder
     private GridSystem originalGrid; // Baþlangýçta hangi grid'de olduðumuzu hatýrlar
-    
+
+    public List<GridSystem> allGrids = new List<GridSystem>();
+
     private void Start()
     {
+        allGrids.Add(GridSystem.instance); // GridSystem'i listeye ekle
+        allGrids.Add(BoxGridSystem.instance); // GridSystem'i listeye ekle
+
         mainCamera = Camera.main;
         originalY = transform.position.y;
         
@@ -47,7 +52,6 @@ public class DragAndDrop : MonoBehaviour
     // Objenin þu anda hangi grid'de olduðunu bulur
     private void FindCurrentGrid()
     {
-        GridSystem[] allGrids = FindObjectsOfType<GridSystem>();
         float closestDistance = float.MaxValue;
         GridSystem closestGrid = null;
 
