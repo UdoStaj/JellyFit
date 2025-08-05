@@ -144,6 +144,7 @@ public class Test : MonoBehaviour
     }
 }
 
+[Serializable]
 public class BlockedEdges
 {
     private readonly HashSet<BlockedEdge> edges = new HashSet<BlockedEdge>();
@@ -167,7 +168,7 @@ public class BlockedEdges
         return false;
     }
 }
-
+[Serializable]
 public class BlockedEdge
 {
     public Vector2Int firstNode;

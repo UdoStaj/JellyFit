@@ -15,7 +15,7 @@ public class GridSystem : MonoBehaviour
 
     private Vector3 upperLeftNodePosition;
 
-    private Node[,] grid;
+    public Node[,] grid;
 
     private void Awake()
     {
@@ -75,6 +75,7 @@ public class GridSystem : MonoBehaviour
     }
 }
 
+[Serializable]
 public class Node
 {
     private bool isEmpty;
