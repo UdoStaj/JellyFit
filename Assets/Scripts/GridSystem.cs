@@ -6,10 +6,10 @@ using UnityEngine;
 public class GridSystem : MonoBehaviour
 {
     public static GridSystem instance;
-    [SerializeField] private float verticalLength; // X
-    [SerializeField] private float horizontalLength; // Y
+    public float verticalLength; // X
+    public float horizontalLength; // Y
 
-    [SerializeField] private float nodeEdgeLength;
+    public float nodeEdgeLength;
 
     [SerializeField] private GameObject testPrefab;
 
@@ -77,6 +77,7 @@ public class GridSystem : MonoBehaviour
 
 public class Node
 {
+    private bool isEmpty;
     private Vector3 position;
     public Vector2Int coordinates;
 
