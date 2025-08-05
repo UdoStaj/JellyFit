@@ -1,98 +1,274 @@
-using System;
-using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
+using System.IO;
+
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
+
+[System.Serializable]
+public class LevelData
+{
+    public List<Vector2Int> boxCells;
+    public List<Vector2Int> soapCells;
+    public List<Vector2Int> obstacleCells;
+    public int gridWidth;
+    public int gridHeight;
+    public float cellSize;
+}
 
 public class GridSystem : MonoBehaviour
 {
-    public static GridSystem instance;
-    [SerializeField] private float verticalLength; // X
-    [SerializeField] private float horizontalLength; // Y
+    public GameObject targetObject;
 
-    [SerializeField] private float nodeEdgeLength;
+    [Min(1)] public int gridWidth = 5;
+    [Min(1)] public int gridHeight = 5;
+    [Min(0.1f)] public float cellSize = 1f;
 
-    [SerializeField] private GameObject testPrefab;
+    public List<Vector2Int> boxCells = new List<Vector2Int>();
+    public List<Vector2Int> soapCells = new List<Vector2Int>();
+    public List<Vector2Int> obstacleCells = new List<Vector2Int>();
 
-    private Vector3 upperLeftNodePosition;
+    public GameObject boxPrefab;
+    public GameObject soapPrefab;
+    public GameObject obstaclePrefab;
+    public GameObject highlightPrefab;
+    public GameObject soaps;
 
-    private Node[,] grid;
+    [HideInInspector] public List<Vector2Int> markedCells = new List<Vector2Int>();
 
+    public Vector3 gridOrigin;
+    private bool[,] gridOccupied;
+
+    private float autoSaveTimer = 0f;
+    public float autoSaveInterval = 10f; // Her 10 saniyede otomatik kaydet
+
+    public static GridSystem Instance;
+    public SoapBox MyBox;
     private void Awake()
     {
-        instance = this;
-        CreateGrid();
+        Instance = this;
+    }
+    public void InitializeGrid()
+    {
+        if (targetObject == null)
+        {
+            Debug.LogError("Target object not assigned!");
+            return;
+        }
+
+        Renderer rend = targetObject.GetComponent<Renderer>();
+        if (rend == null)
+        {
+            Debug.LogError("Target object has no Renderer!");
+            return;
+        }
+
+        Bounds bounds = rend.bounds;
+
+        float usableWidth = gridWidth * cellSize;
+        float usableHeight = gridHeight * cellSize;
+
+        if (usableWidth > bounds.size.x || usableHeight > bounds.size.z)
+        {
+            Debug.LogWarning("Grid is larger than the target object!");
+        }
+
+        gridOrigin = new Vector3(
+            bounds.center.x - usableWidth / 2f,
+            bounds.max.y,
+            bounds.center.z - usableHeight / 2f
+        );
+
+        gridOccupied = new bool[gridWidth, gridHeight];
     }
 
-    public void CreateGrid()
+    public Vector2Int GetGridIndexFromWorld(Vector3 worldPos)
     {
-        int x = Mathf.FloorToInt(verticalLength / nodeEdgeLength); // x eksenindeki boyut
-        int y = Mathf.FloorToInt(horizontalLength / nodeEdgeLength); // y eksenindeki boyut
+        int x = Mathf.FloorToInt((worldPos.x - gridOrigin.x) / cellSize);
+        int y = Mathf.FloorToInt((worldPos.z - gridOrigin.z) / cellSize);
+        return new Vector2Int(x, y);
+    }
 
-        grid = new Node[x, y];
+    public Vector3 GetCellCenter(Vector2Int index)
+    {
+        return new Vector3(
+            gridOrigin.x + index.x * cellSize + cellSize / 2f,
+            gridOrigin.y,
+            gridOrigin.z + index.y * cellSize + cellSize / 2f
+        );
+    }
 
-        Vector3 nodePosition = transform.position +
-                               new Vector3(-horizontalLength / 2 + nodeEdgeLength / 2, 0, verticalLength / 2 - nodeEdgeLength / 2);
+    public GameObject GetCellObject(Vector2Int index)
+    {
 
-        upperLeftNodePosition = nodePosition;
+        if (!IsValidCell(index)) return null;
 
-        for (int i = 0; i < x; i++) //x in verisini tutuyor
+        Debug.Log("is valid cell true");
+        Vector3 cellCenter = GetCellCenter(index);
+        Collider[] colliders = Physics.OverlapBox(cellCenter, new Vector3(cellSize / 2f, cellSize / 2f, cellSize / 2f));
+
+        foreach (var collider in colliders)
         {
-            for (int j = 0; j < y; j++) //y in verisini tutuyor
+            if (collider.gameObject != targetObject)
             {
-                Node tempNode = new Node(nodePosition, i, j);
-
-                grid[i, j] = tempNode;
-
-                nodePosition.x += nodeEdgeLength;
+                return collider.gameObject;
             }
+        }
 
-            nodePosition.z -= nodeEdgeLength;
-            nodePosition.x = upperLeftNodePosition.x;
+        return null;
+    }
+
+
+    public bool IsValidCell(Vector2Int index)
+    {
+        return index.x >= 0 && index.x < gridWidth && index.y >= 0 && index.y < gridHeight;
+    }
+    public bool IsValidCellCut(Vector2Int index)
+    {
+        return index.x >= 0 && index.x <= gridWidth && index.y >= 0 && index.y <= gridHeight;
+    }
+
+    public bool IsCellOccupied(Vector2Int index)
+    {
+        if (!IsValidCell(index)) return false;
+        return gridOccupied[index.x, index.y];
+    }
+
+    public bool IsCellOccupiedCut(Vector2Int index)
+    {
+        if (!IsValidCellCut(index)) return false;
+        return gridOccupied[index.x, index.y];
+    }
+
+    public void MarkCellOccupied(Vector2Int index)
+    {
+        if (IsValidCell(index))
+        {
+            gridOccupied[index.x, index.y] = true;
         }
     }
 
-    public Node GetNodeFromPosition(Vector3 position)
+    public void MarkCellEmpty(Vector2Int index)
     {
-        float differenceX = Mathf.Abs(position.z - upperLeftNodePosition.z);
-        float differenceY = Mathf.Abs(position.x - upperLeftNodePosition.x);
-
-        int x = Mathf.RoundToInt(differenceX / nodeEdgeLength);
-        int y = Mathf.RoundToInt(differenceY / nodeEdgeLength);
-
-        return grid[x, y];
+        if (IsValidCell(index))
+        {
+            gridOccupied[index.x, index.y] = false;
+        }
     }
 
-    public Vector3 GetPositionFromCoordinates(Vector2Int coordinates)
+    private void Start()
     {
-        return grid[coordinates.x, coordinates.y].GetPosition();
+        InitializeGrid();
+        PlaceMarkedCubes();
     }
 
-    public Vector2Int GetCoordinatesFromPosition(Vector3 position) => GetNodeFromPosition(position).coordinates;
 
+    public void PlaceMarkedCubes()
+    {
+        // Box cubes
+        foreach (var index in boxCells)
+        {
+            if (IsValidCell(index) && !IsCellOccupied(index))
+            {
+                Vector3 pos = GetCellCenter(index);
+                MyBox.Add(GetGridIndexFromWorld(pos));  
+            }
+        }
+        // Soap cubes
+        foreach (var index in soapCells)
+        {
+            if (IsValidCell(index) && !IsCellOccupied(index))
+            {
+                Vector3 pos = GetCellCenter(index);
+                if (soapPrefab != null)
+                {
+                    Instantiate(soapPrefab, new Vector3(pos.x, pos.y + soapPrefab.transform.localScale.y / 2f, pos.z), Quaternion.identity,soaps.transform);
+                    MarkCellOccupied(index);
+                }
+            }
+        }
+
+        // Obstacle cubes
+        foreach (var index in obstacleCells)
+        {
+            if (IsValidCell(index) && !IsCellOccupied(index))
+            {
+                Vector3 pos = GetCellCenter(index);
+                if (obstaclePrefab != null)
+                {
+                    Instantiate(obstaclePrefab, new Vector3(pos.x, pos.y + obstaclePrefab.transform.localScale.y / 2f, pos.z), Quaternion.identity);
+                    MarkCellOccupied(index);
+                }
+            }
+        }
+    }
+    /*public void SaveLevel(string levelName)
+    {
+        LevelData levelData = new LevelData()
+        {
+            boxCells = new List<Vector2Int>(boxCells),
+            soapCells = new List<Vector2Int>(soapCells),
+            obstacleCells = new List<Vector2Int>(obstacleCells),
+            gridWidth = gridWidth,
+            gridHeight = gridHeight,
+            cellSize = cellSize
+        };
+
+        string json = JsonUtility.ToJson(levelData, true);
+        string dir = Path.Combine(Application.dataPath, "Ceyhun/Levels");
+        if (!Directory.Exists(dir))
+            Directory.CreateDirectory(dir);
+
+        string filePath = Path.Combine(dir, levelName + ".json");
+        File.WriteAllText(filePath, json);
+
+#if UNITY_EDITOR
+        Debug.Log("Level saved at: " + filePath);
+        AssetDatabase.Refresh();
+#endif
+    }*/
+
+
+#if UNITY_EDITOR
     private void OnDrawGizmos()
     {
-        Gizmos.DrawWireCube(transform.position, new Vector3(horizontalLength, 1, verticalLength));
-    }
-}
+        if (!Application.isPlaying)
+        {
+            InitializeGrid();
+        }
 
-public class Node
-{
-    private Vector3 position;
-    public Vector2Int coordinates;
+        Gizmos.color = Color.gray;
 
-    public Node(Vector3 position, int x, int y)
-    {
-        SetPosition(position, x, y);
-    }
+        for (int x = 0; x < gridWidth; x++)
+        {
+            for (int y = 0; y < gridHeight; y++)
+            {
+                Vector2Int index = new Vector2Int(x, y);
+                Vector3 center = GetCellCenter(index);
+                Vector3 size = new Vector3(cellSize, 0.01f, cellSize);
+                Gizmos.DrawWireCube(center, size);
 
-    public Vector3 GetPosition()
-    {
-        return position;
+                if (boxCells.Contains(index))
+                {
+                    Gizmos.color = Color.blue;
+                    Gizmos.DrawCube(center + Vector3.up * 0.01f, size * 0.8f);
+                    Gizmos.color = Color.gray;
+                }
+                else if (soapCells.Contains(index))
+                {
+                    Gizmos.color = Color.green;
+                    Gizmos.DrawCube(center + Vector3.up * 0.01f, size * 0.8f);
+                    Gizmos.color = Color.gray;
+                }
+                else if (obstacleCells.Contains(index))
+                {
+                    Gizmos.color = Color.red;
+                    Gizmos.DrawCube(center + Vector3.up * 0.01f, size * 0.8f);
+                    Gizmos.color = Color.gray;
+                }
+            }
+        }
     }
-
-    public void SetPosition(Vector3 position, int x, int y)
-    {
-        this.position = position;
-        coordinates = new Vector2Int(x, y);
-    }
+#endif
 }
