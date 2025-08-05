@@ -1,9 +1,11 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 public class DragAndDrop : MonoBehaviour
 {
     [SerializeField]private bool isDragging = false;
+    private bool isFirstFrame=true;
     private Vector3 offset;
     private Camera mainCamera;
 
@@ -16,11 +18,20 @@ public class DragAndDrop : MonoBehaviour
     Coroutine changeYCoroutine;
     Coroutine snapCoroutine;
     [SerializeField] private LayerMask draggableLayer = -1;
+
+    private List<Node> previouslyOccupiedNodes = new List<Node>();
+    private GridSystem currentGrid; // Hangi grid'de olduðumuzu takip eder
+    private GridSystem originalGrid; // Baþlangýçta hangi grid'de olduðumuzu hatýrlar
+    
     private void Start()
     {
         mainCamera = Camera.main;
         originalY = transform.position.y;
-        lastValidPosition = transform.position;
+        
+        // Baþlangýçta hangi grid'de olduðumuzu bul
+        FindCurrentGrid();
+        originalGrid = currentGrid;
+        UpdateOccupiedNodes();
     }
 
     private void Update()
@@ -33,10 +44,38 @@ public class DragAndDrop : MonoBehaviour
         }
     }
 
+    // Objenin þu anda hangi grid'de olduðunu bulur
+    private void FindCurrentGrid()
+    {
+        GridSystem[] allGrids = FindObjectsOfType<GridSystem>();
+        float closestDistance = float.MaxValue;
+        GridSystem closestGrid = null;
+
+        foreach (GridSystem grid in allGrids)
+        {
+            // Grid'in merkez pozisyonunu hesapla
+            Vector3 gridCenter = grid.transform.position;
+            float distance = Vector3.Distance(transform.position, gridCenter);
+            
+            if (distance < closestDistance)
+            {
+                closestDistance = distance;
+                closestGrid = grid;
+            }
+        }
+
+        currentGrid = closestGrid;
+    }
+
     private void HandleMouseInput()
     {
         if (Input.GetMouseButtonDown(0))
         {
+            if (isFirstFrame)
+            {
+                lastValidPosition = transform.position;
+                isFirstFrame = false;
+            }
             Ray ray = mainCamera.ScreenPointToRay(Input.mousePosition);
             RaycastHit hit;
 
@@ -52,12 +91,13 @@ public class DragAndDrop : MonoBehaviour
         else if (Input.GetMouseButtonUp(0) && isDragging)
         {
             StopDragging();
+            isFirstFrame = true;
         }
     }
 
     private void StartDragging()
     {
-
+        ClearPreviouslyOccupiedNodes();
         currentTargetY = targetY;
         if (changeYCoroutine != null)
         {
@@ -88,12 +128,47 @@ public class DragAndDrop : MonoBehaviour
         changeYCoroutine = StartCoroutine(ChangeYPosAtDragging(currentTargetY));
         isDragging = false;
 
-        if (IsPositionInsideGrid(transform.position))
+        // Drop sýrasýnda hangi grid'e en yakýn olduðumuzu kontrol et
+        FindCurrentGrid();
+
+        if (IsPositionInsideGrid())
         {
-            StartSnapToGrid();
+            // Her child küp için node'u iþaretle
+            bool canPlace = true;
+            List<Node> nodesToOccupy = new List<Node>();
+
+            for (int i = 0; i < transform.childCount; i++)
+            {
+                Transform child = transform.GetChild(i);
+                Node childNode = currentGrid.GetNodeFromPosition(child.position);
+
+                if (!childNode.IsEmpty())
+                {
+                    canPlace = false;
+                    break;
+                }
+                nodesToOccupy.Add(childNode);
+            }
+
+            if (canPlace)
+            {
+                // Tüm node'larý iþgal et
+                foreach (Node node in nodesToOccupy)
+                {
+                    node.SetEmpty(false);
+                }
+                previouslyOccupiedNodes = nodesToOccupy;
+                StartSnapToGrid();
+            }
+            else
+            {
+                RestorePreviouslyOccupiedNodes();
+                StartBackToLastPosition();
+            }
         }
         else
         {
+            RestorePreviouslyOccupiedNodes();
             StartBackToLastPosition();
         }
     }
@@ -110,25 +185,21 @@ public class DragAndDrop : MonoBehaviour
             transform.position = new Vector3(newPos.x, transform.position.y, newPos.z);
         }
     }
-    private bool IsPositionInsideGrid(Vector3 position)
+    
+    private bool IsPositionInsideGrid()
     {
+        if (currentGrid == null) return false;
+        
         try
         {
-            // Ýlk child cube'ý referans alarak kontrol et
-            Transform firstChild = transform.GetChild(0);
-            Vector3 firstChildSnapPos = GridSystem.instance.GetPositionFromCoordinates(
-                           GridSystem.instance.GetCoordinatesFromPosition(firstChild.position));
-            Vector3 offset = firstChildSnapPos - firstChild.position;
-
-            int maxX = Mathf.FloorToInt(GridSystem.instance.verticalLength / GridSystem.instance.nodeEdgeLength);
-            int maxY = Mathf.FloorToInt(GridSystem.instance.horizontalLength / GridSystem.instance.nodeEdgeLength);
+            int maxX = Mathf.FloorToInt(currentGrid.verticalLength / currentGrid.nodeEdgeLength);
+            int maxY = Mathf.FloorToInt(currentGrid.horizontalLength / currentGrid.nodeEdgeLength);
 
             // Tüm child'larýn grid içinde olup olmadýðýný kontrol et
             for (int i = 0; i < transform.childCount; i++)
             {
                 Transform child = transform.GetChild(i);
-                Vector3 projectedPos = child.position + offset;
-                Vector2Int coordinates = GridSystem.instance.GetCoordinatesFromPosition(projectedPos);
+                Vector2Int coordinates = currentGrid.GetCoordinatesFromPosition(child.position);
 
                 if (coordinates.x < 0 || coordinates.x >= maxX || coordinates.y < 0 || coordinates.y >= maxY)
                 {
@@ -143,6 +214,7 @@ public class DragAndDrop : MonoBehaviour
             return false;
         }
     }
+    
     public void StartSnapToGrid()
     {
         if (snapCoroutine != null)
@@ -150,17 +222,21 @@ public class DragAndDrop : MonoBehaviour
         snapCoroutine = StartCoroutine(SnapToGrid());
 
     }
+    
     public void StartBackToLastPosition()
     {
         if (snapCoroutine != null)
             StopCoroutine(snapCoroutine);
         snapCoroutine = StartCoroutine(BackToLastPosition(lastValidPosition));
     }
+    
     public IEnumerator SnapToGrid()
     {
+        if (currentGrid == null) yield break;
+        
         Transform firstChild = transform.GetChild(0);
-        Vector3 firstChildSnapPos = GridSystem.instance.GetPositionFromCoordinates(
-                       GridSystem.instance.GetCoordinatesFromPosition(firstChild.position));
+        Vector3 firstChildSnapPos = currentGrid.GetPositionFromCoordinates(
+                       currentGrid.GetCoordinatesFromPosition(firstChild.position));
 
         // Parent'ýn ne kadar hareket etmesi gerektiðini hesapla
         Vector3 offset = firstChildSnapPos - firstChild.position;
@@ -175,13 +251,20 @@ public class DragAndDrop : MonoBehaviour
             yield return null;
         }
         transform.position = new Vector3(targetParentPos.x, transform.position.y, targetParentPos.z);
+        if(currentGrid.AreAllNodesFull())
+        {
+            Debug.Log("All nodes are full.");
+            //burada tüm node'lar doluysa yapýlacak iþlemler(level complete)
+        }
 
-        lastValidPosition = transform.position;
         snapCoroutine = null;
     }
 
     IEnumerator BackToLastPosition(Vector3 lastPos)
     {
+        // Geri dönerken orijinal grid'i kullan
+        currentGrid = originalGrid;
+        
         while (Vector3.Distance(transform.position, lastPos) > 0.05f)
         {
             Vector3 newPos = Vector3.Lerp(transform.position, lastPos, Time.deltaTime * XZTransitionSpeed);
@@ -210,5 +293,38 @@ public class DragAndDrop : MonoBehaviour
 
         }
         changeYCoroutine = null;
+    }
+
+    private void UpdateOccupiedNodes()
+    {
+        if (currentGrid == null) return;
+        
+        previouslyOccupiedNodes.Clear();
+        for (int i = 0; i < transform.childCount; i++)
+        {
+            Transform child = transform.GetChild(i);
+            if (IsPositionInsideGrid())
+            {
+                Node childNode = currentGrid.GetNodeFromPosition(child.position);
+                previouslyOccupiedNodes.Add(childNode);
+                childNode.SetEmpty(false);
+            }
+        }
+    }
+
+    private void ClearPreviouslyOccupiedNodes()
+    {
+        foreach (Node node in previouslyOccupiedNodes)
+        {
+            node.SetEmpty(true);
+        }
+    }
+
+    private void RestorePreviouslyOccupiedNodes()
+    {
+        foreach (Node node in previouslyOccupiedNodes)
+        {
+            node.SetEmpty(false);
+        }
     }
 }
