@@ -13,6 +13,8 @@ public class SoundManager : MonoBehaviour
     public AudioClip errorClip;
     public AudioClip bgmClip;
     public AudioClip clickClip;
+    public AudioClip dragObjClip;
+    public AudioClip SnapObjClip;
 
     private void Awake()
     {
@@ -46,6 +48,9 @@ public class SoundManager : MonoBehaviour
     public void PlaySuccess() => PlaySFX(successClip);
     public void PlayError() => PlaySFX(errorClip);
     public void PlayClick() => PlaySFX(clickClip);
+    public void PlayDragObj() => PlaySFX(dragObjClip);
+    public void PlaySnapObj() => PlaySFX(SnapObjClip);
+
 
     public void PlayBGM()
     {
