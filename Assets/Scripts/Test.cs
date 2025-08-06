@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
 using Random = UnityEngine.Random;
@@ -10,11 +10,10 @@ public class Test : MonoBehaviour
     [SerializeField] private List<AdjacencyEdge> adjacencyEdges;
     public float cubeSize = 0.99f;
     public Color initialColor = Color.red;
-    private List<Vector2Int> nodeList;
+
     private BlockedEdges blockedEdges;
     private Dictionary<Vector2Int, GameObject> cubeMap;
-
-    private List<Transform> points = new List<Transform>();
+    private List<Vector2Int> nodeList;
 
     private static readonly Vector2Int[] directions = new Vector2Int[]
     {
@@ -26,52 +25,51 @@ public class Test : MonoBehaviour
 
     private void Start()
     {
+        cubeMap = new Dictionary<Vector2Int, GameObject>();
         nodeList = new List<Vector2Int>();
 
+        // Grid üzerindeki başlangıç noktalarını oku
+        List<Transform> points = new List<Transform>();
         for (int i = 0; i < pointParent.childCount; i++)
             points.Add(pointParent.GetChild(i));
 
-        for (int i = 0; i < points.Count; i++)
+        foreach (Transform point in points)
         {
-            Vector2Int coordinates = GridSystem.instance.GetCoordinatesFromPosition(points[i].position);
-            nodeList.Add(coordinates);
-            points[i].gameObject.SetActive(false);
+            Vector2Int coord = GridSystem.instance.GetCoordinatesFromPosition(point.position);
+            if (!cubeMap.ContainsKey(coord))
+            {
+                GameObject cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                cube.transform.position = GridSystem.instance.GetPositionFromCoordinates(coord);
+                cube.transform.localScale = Vector3.one * cubeSize;
+                cube.GetComponent<Renderer>().material.color = initialColor;
+                cube.layer = LayerMask.NameToLayer("draggableLayer");
+                cube.AddComponent<CubeData>().gridCoord = coord;
+
+                cubeMap.Add(coord, cube);
+                nodeList.Add(coord);
+            }
+
+            point.gameObject.SetActive(false);
         }
 
-        cubeMap = new Dictionary<Vector2Int, GameObject>();
-        GameObject dragObj = Instantiate(dragObjPrefab);
-        Vector3 tempPos = Vector3.zero;
-
-        foreach (Vector2Int cell in nodeList)
-        {
-            tempPos += GridSystem.instance.GetPositionFromCoordinates(cell);
-        }
-
-        dragObj.transform.position = tempPos / nodeList.Count;
-
-        foreach (Vector2Int pos in nodeList)
-        {
-            GameObject cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            cube.transform.position = GridSystem.instance.GetPositionFromCoordinates(pos);
-            cube.transform.localScale = Vector3.one * cubeSize;
-            Renderer renderer = cube.GetComponent<Renderer>();
-            renderer.material.color = initialColor;
-            cubeMap.Add(pos, cube);
-
-            cube.transform.parent = dragObj.transform;
-        }
+        // İlk grubu tek bir dragObj altına al
+        CreateInitialDragObject();
     }
 
-    private void CreateBlockedEdges()
+    private void CreateInitialDragObject()
     {
-        blockedEdges = new BlockedEdges();
+        GameObject dragObj = Instantiate(dragObjPrefab, transform);
+        Vector3 avgPos = Vector3.zero;
 
-        for (int i = 0; i < adjacencyEdges.Count; i++)
+        foreach (var coord in nodeList)
+            avgPos += GridSystem.instance.GetPositionFromCoordinates(coord);
+
+        dragObj.transform.position = avgPos / nodeList.Count;
+
+        foreach (var coord in nodeList)
         {
-            if (adjacencyEdges[i].edges.Length == 0) continue;
-            Vector2Int firstCoordinates = GridSystem.instance.GetCoordinatesFromPosition(adjacencyEdges[i].edges[0].position);
-            Vector2Int secondCoordinates = GridSystem.instance.GetCoordinatesFromPosition(adjacencyEdges[i].edges[1].position);
-            blockedEdges.AddEdge(firstCoordinates, secondCoordinates);
+            GameObject cube = cubeMap[coord];
+            cube.transform.parent = dragObj.transform;
         }
     }
 
@@ -79,67 +77,151 @@ public class Test : MonoBehaviour
     {
         if (Input.GetKeyDown(KeyCode.Space))
         {
-            CreateBlockedEdges();
+            // 1. adjacencyEdges listesini temizle
+            adjacencyEdges.Clear();
 
-            HashSet<Vector2Int> visited = new HashSet<Vector2Int>();
-            List<HashSet<Vector2Int>> regions = new List<HashSet<Vector2Int>>();
+            // 2. Sahnedeki tüm bıçakları bul
+            KnifeDragAndDrop[] knives = FindObjectsOfType<KnifeDragAndDrop>();
 
-            foreach (Vector2Int cell in nodeList)
+            foreach (var knife in knives)
             {
-                if (visited.Contains(cell))
+                var neighbors = knife.currentNeighbors;
+
+                // Yalnızca yatay olanlar için komşu ilişkisi oluştur
+                if (knife.isHorizontal) // Bu bıçak yataysa
                 {
-                    continue;
-                }
-
-                Stack<Vector2Int> stack = new Stack<Vector2Int>();
-                HashSet<Vector2Int> region = new HashSet<Vector2Int>();
-                stack.Push(cell);
-
-                while (stack.Count > 0)
-                {
-                    Vector2Int current = stack.Pop();
-                    if (!visited.Add(current))
+                    for (int i = 0; i < neighbors.Count; i++)
                     {
-                        continue;
-                    }
-
-                    region.Add(current);
-
-                    foreach (Vector2Int dir in directions)
-                    {
-                        Vector2Int neighbor = current + dir;
-                        if (nodeList.Contains(neighbor) && blockedEdges.ContainsEdge(current, neighbor) == false)
+                        for (int j = i + 1; j < neighbors.Count; j++)
                         {
-                            stack.Push(neighbor);
+                            Vector2Int a = neighbors[i].coordinates;
+                            Vector2Int b = neighbors[j].coordinates;
+
+                            // Eğer bıçak yataysa, sadece Y koordinatları sabit olanları komşu yap
+                            if (a.y == b.y)
+                            {
+                                AdjacencyEdge edge = new AdjacencyEdge
+                                {
+                                    edges = new Vector2Int[] { a, b }
+                                };
+                                adjacencyEdges.Add(edge);
+                            }
                         }
                     }
                 }
-
-                regions.Add(region);
             }
 
-            for (int i = 1; i < regions.Count; i++)
+            RecalculateRegions(); // Varsa
+        }
+    }
+
+
+
+    private void RecalculateRegions()
+    {
+        RefreshCubeStates();
+        CreateBlockedEdges();
+
+        HashSet<Vector2Int> visited = new HashSet<Vector2Int>();
+        List<HashSet<Vector2Int>> regions = new List<HashSet<Vector2Int>>();
+
+        foreach (var coord in nodeList)
+        {
+            if (visited.Contains(coord)) continue;
+
+            HashSet<Vector2Int> region = new HashSet<Vector2Int>();
+            Stack<Vector2Int> stack = new Stack<Vector2Int>();
+            stack.Push(coord);
+
+            while (stack.Count > 0)
             {
-                Color color = new Color(Random.Range(0f, 1f), Random.Range(0f, 1f), Random.Range(0f, 1f));
+                Vector2Int current = stack.Pop();
+                if (!visited.Add(current)) continue;
 
-                GameObject dragObj = Instantiate(dragObjPrefab);
-                Vector3 tempPos = Vector3.zero;
+                region.Add(current);
 
-                foreach (Vector2Int cell in regions[i])
+                foreach (var dir in directions)
                 {
-                    tempPos += GridSystem.instance.GetPositionFromCoordinates(cell);
-                }
-
-                dragObj.transform.position = tempPos / regions[i].Count;
-
-                foreach (Vector2Int cell in regions[i])
-                {
-                    GameObject cubeObject = cubeMap[cell];
-                    Renderer cubeRenderer = cubeObject.GetComponent<Renderer>();
-                    cubeRenderer.material.color = color;
-                    cubeObject.transform.parent = dragObj.transform;
+                    Vector2Int neighbor = current + dir;
+                    if (nodeList.Contains(neighbor) && !blockedEdges.ContainsEdge(current, neighbor))
+                    {
+                        stack.Push(neighbor);
+                    }
                 }
             }
+
+            regions.Add(region);
+        }
+
+        // Yeni dragObj'ler oluştur
+        foreach (var region in regions)
+        {
+            GameObject dragObj = Instantiate(dragObjPrefab, transform);
+            Color color = new Color(Random.value, Random.value, Random.value);
+            Vector3 centerPos = Vector3.zero;
+
+            foreach (var coord in region)
+                centerPos += GridSystem.instance.GetPositionFromCoordinates(coord);
+
+            dragObj.transform.position = centerPos / region.Count;
+
+            foreach (var coord in region)
+            {
+                if (cubeMap.TryGetValue(coord, out GameObject cube))
+                {
+                    cube.transform.parent = dragObj.transform;
+                    cube.GetComponent<Renderer>().material.color = color;
+                    
+                }
+            }
+        }
+    }
+
+    private void RefreshCubeStates()
+    {
+        // Küpleri serbest bırak ve verileri güncelle
+        nodeList.Clear();
+        cubeMap.Clear();
+
+        CubeData[] allCubes = FindObjectsOfType<CubeData>();
+        foreach (CubeData cubeData in allCubes)
+        {
+            GameObject cube = cubeData.gameObject;
+            Vector2Int coord = GridSystem.instance.GetCoordinatesFromPosition(cube.transform.position);
+
+            cubeData.gridCoord = coord; // güncelle
+            cube.transform.parent = null;
+            cube.GetComponent<Renderer>().material.color = initialColor;
+
+            if (!cubeMap.ContainsKey(coord))
+            {
+                cubeMap.Add(coord, cube);
+                nodeList.Add(coord);
+            }
+        }
+
+        // Eski dragObj'leri temizle
+        foreach (Transform child in transform)
+        {
+            if (child.name.Contains(dragObjPrefab.name))
+            {
+                Destroy(child.gameObject);
+            }
+        }
+    }
+
+    private void CreateBlockedEdges()
+    {
+        blockedEdges = new BlockedEdges();
+
+        foreach (var adj in adjacencyEdges)
+        {
+            if (adj.edges.Length < 2) continue;
+
+            Vector2Int a = adj.edges[0];
+            Vector2Int b = adj.edges[1];
+
+            blockedEdges.AddEdge(a, b);
         }
     }
 }
@@ -149,27 +231,20 @@ public class BlockedEdges
 {
     private readonly HashSet<BlockedEdge> edges = new HashSet<BlockedEdge>();
 
-    public void AddEdge(Vector2Int firstNode, Vector2Int secondNode)
+    public void AddEdge(Vector2Int a, Vector2Int b)
     {
-        edges.Add(new BlockedEdge(firstNode, secondNode));
-        edges.Add(new BlockedEdge(secondNode, firstNode));
+        edges.Add(new BlockedEdge(a, b));
+        edges.Add(new BlockedEdge(b, a));
     }
 
-    public bool ContainsEdge(Vector2Int firstNode, Vector2Int secondNode)
+    public bool ContainsEdge(Vector2Int a, Vector2Int b)
     {
-        foreach (BlockedEdge e in edges)
-        {
-            if (e.firstNode == firstNode && e.secondNode == secondNode)
-            {
-                return true;
-            }
-        }
-
-        return false;
+        return edges.Contains(new BlockedEdge(a, b));
     }
 }
+
 [Serializable]
-public class BlockedEdge
+public class BlockedEdge : IEquatable<BlockedEdge>
 {
     public Vector2Int firstNode;
     public Vector2Int secondNode;
@@ -179,10 +254,25 @@ public class BlockedEdge
         this.firstNode = firstNode;
         this.secondNode = secondNode;
     }
+
+    public bool Equals(BlockedEdge other)
+    {
+        return firstNode == other.firstNode && secondNode == other.secondNode;
+    }
+
+    public override int GetHashCode()
+    {
+        return firstNode.GetHashCode() ^ secondNode.GetHashCode();
+    }
 }
 
 [Serializable]
 public struct AdjacencyEdge
 {
-    public Transform[] edges;
+    public Vector2Int[] edges;
+}
+
+public class CubeData : MonoBehaviour
+{
+    public Vector2Int gridCoord;
 }

@@ -297,6 +297,54 @@ Transform:
   - {fileID: 80656755}
   m_Father: {fileID: 1913133245}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &217984264
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 217984266}
+  - component: {fileID: 217984265}
+  m_Layer: 0
+  m_Name: Grid (1)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &217984265
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 217984264}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 45bba0d1ed3bdc44887a047e2025c89e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  verticalLength: 5
+  horizontalLength: 5
+  nodeEdgeLength: 1
+  testPrefab: {fileID: 0}
+--- !u!4 &217984266
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 217984264}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 15.62}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &377738136
 GameObject:
   m_ObjectHideFlags: 0
@@ -351,6 +399,7 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 64
   currentNeighbors: []
+  isHorizontal: 1
 --- !u!1 &410370678
 GameObject:
   m_ObjectHideFlags: 0
@@ -1607,6 +1656,7 @@ MonoBehaviour:
   draggableLayer:
     serializedVersion: 2
     m_Bits: 4294967295
+  allGrids: []
 --- !u!65 &1525138492
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -2187,10 +2237,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   pointParent: {fileID: 189320873}
   dragObjPrefab: {fileID: 2566069615019448495, guid: 7f056035c33434b8d82b16d180f1a0d5, type: 3}
-  adjacencyEdges:
-  - edges:
-    - {fileID: 1199148475}
-    - {fileID: 1461945201}
+  adjacencyEdges: []
   cubeSize: 0.95
   initialColor: {r: 1, g: 0, b: 0, a: 1}
 --- !u!1 &2114258348
@@ -2294,6 +2341,7 @@ SceneRoots:
   - {fileID: 705507995}
   - {fileID: 1913133245}
   - {fileID: 718377959}
+  - {fileID: 217984266}
   - {fileID: 1525138495}
   - {fileID: 377738137}
   - {fileID: 3710351931475102545}

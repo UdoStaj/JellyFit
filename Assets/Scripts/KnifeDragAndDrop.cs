@@ -21,6 +21,8 @@ public class KnifeDragAndDrop : MonoBehaviour
     public List<Node> currentNeighbors;
     public BlockedEdges blockedEdges = new BlockedEdges();
 
+    public bool isHorizontal = true;
+
     private void Start()
     {
         mainCamera = Camera.main;
@@ -35,11 +37,6 @@ public class KnifeDragAndDrop : MonoBehaviour
         if (isDragging)
         {
             DragObject();
-        }
-
-        if (isDragging || Vector3.Distance(transform.position, lastValidPosition) > 0.1f)
-        {
-            UpdateNeighbors();
         }
     }
 
@@ -104,6 +101,8 @@ public class KnifeDragAndDrop : MonoBehaviour
         {
             StartBackToLastPosition();
         }
+
+        UpdateNeighbors();
     }
 
     private void DragObject()
@@ -204,7 +203,7 @@ public class KnifeDragAndDrop : MonoBehaviour
 
     public void UpdateNeighbors()
     {
-        currentNeighbors = GetNeighborsOfKnife(true, 2, 1);
+        currentNeighbors = GetNeighborsOfKnife(isHorizontal, 2, 1);
     }
 
     public List<Node> GetNeighborsOfKnife(bool isHorizontal, int knifeWidthInNodes, int knifeHeightInNodes)
@@ -216,94 +215,57 @@ public class KnifeDragAndDrop : MonoBehaviour
         // Yatay (Horizontal) Yön
         if (isHorizontal)
         {
-            // Yatayda bıçak genişliği kadar döngü kuruyoruz
             for (int i = 0; i < knifeWidthInNodes; i++)
             {
                 Vector2Int currentCoords = new Vector2Int(startCoords.x + i, startCoords.y);
 
-                if (currentCoords.x >= 0 && currentCoords.x < GridSystem.instance.grid.GetLength(0) &&
-                    currentCoords.y >= 0 && currentCoords.y < GridSystem.instance.grid.GetLength(1))
+                if (currentCoords.y >= 0 && currentCoords.y < GridSystem.instance.grid.GetLength(0) &&
+                    currentCoords.x >= 0 && currentCoords.x < GridSystem.instance.grid.GetLength(1))
                 {
-                    // Bıçak yüksekliği 1 için, sadece üst ve alt komşuları alıyoruz
-                    for (int j = -1; j <= 0; j++) // Yükseklik 1 ise, sadece üst ve alt komşuları alır
+                    for (int j = -1; j <= 0; j++)
                     {
                         int offsetY = currentCoords.y + j;
 
-                        if (offsetY >= 0 && offsetY < GridSystem.instance.grid.GetLength(1))
+                        if (offsetY >= 0 && offsetY < GridSystem.instance.grid.GetLength(0))
                         {
                             if (!BlockedEdgesContains(currentCoords, new Vector2Int(currentCoords.x, offsetY)))
                             {
-                                neighbors.Add(GridSystem.instance.grid[currentCoords.x, offsetY]);
+                                neighbors.Add(GridSystem.instance.grid[currentCoords.x, offsetY]); // X ve Y yer değiştirdi
                             }
                         }
                     }
-
-                    // Bıçak boyutu 2 ise, üstte ve altta birer komşu daha ekleriz
-                    /*if (knifeHeightInNodes == 2)
-                    {
-                        for (int j = -2; j <= 2; j++) // 2 boyutlu olduğu için bir daha genişletiyoruz
-                        {
-                            int offsetY = currentCoords.y + j;
-
-                            if (offsetY >= 0 && offsetY < GridSystem.instance.grid.GetLength(1))
-                            {
-                                if (!BlockedEdgesContains(currentCoords, new Vector2Int(currentCoords.x, offsetY)))
-                                {
-                                    neighbors.Add(GridSystem.instance.grid[currentCoords.x, offsetY]);
-                                }
-                            }
-                        }
-                    }*/
                 }
             }
         }
         // Dikey (Vertical) Yön
         else
         {
-            // Dikeyde bıçak yüksekliği kadar döngü kuruyoruz
             for (int j = 0; j < knifeHeightInNodes; j++)
             {
                 Vector2Int currentCoords = new Vector2Int(startCoords.x, startCoords.y + j);
 
-                if (currentCoords.x >= 0 && currentCoords.x < GridSystem.instance.grid.GetLength(0) &&
-                    currentCoords.y >= 0 && currentCoords.y < GridSystem.instance.grid.GetLength(1))
+                if (currentCoords.y >= 0 && currentCoords.y < GridSystem.instance.grid.GetLength(0) &&
+                    currentCoords.x >= 0 && currentCoords.x < GridSystem.instance.grid.GetLength(1))
                 {
-                    // Bıçak genişliği 1 ise, sadece sağ ve sol komşuları alıyoruz
-                    for (int i = -1; i <= 0; i++) // Genişlik 1 olduğu için, sadece sağ ve sol komşuları alıyoruz
+                    for (int i = -1; i <= 0; i++)
                     {
                         int offsetX = currentCoords.x + i;
 
-                        if (offsetX >= 0 && offsetX < GridSystem.instance.grid.GetLength(0))
+                        if (offsetX >= 0 && offsetX < GridSystem.instance.grid.GetLength(1))
                         {
                             if (!BlockedEdgesContains(currentCoords, new Vector2Int(offsetX, currentCoords.y)))
                             {
-                                neighbors.Add(GridSystem.instance.grid[offsetX, currentCoords.y]);
+                                neighbors.Add(GridSystem.instance.grid[offsetX, currentCoords.y]); // X ve Y yer değiştirdi
                             }
                         }
                     }
-
-                    // Bıçak boyutu 2 ise, sağda ve solda 1'er komşu daha ekleriz
-                    /*if (knifeWidthInNodes == 2)
-                    {
-                        for (int i = -2; i <= 2; i++) // 2 boyutlu olduğu için bir daha genişletiyoruz
-                        {
-                            int offsetX = currentCoords.x + i;
-
-                            if (offsetX >= 0 && offsetX < GridSystem.instance.grid.GetLength(0))
-                            {
-                                if (!BlockedEdgesContains(currentCoords, new Vector2Int(offsetX, currentCoords.y)))
-                                {
-                                    neighbors.Add(GridSystem.instance.grid[offsetX, currentCoords.y]);
-                                }
-                            }
-                        }
-                    }*/
                 }
             }
         }
 
         return neighbors;
     }
+
 
 
 
