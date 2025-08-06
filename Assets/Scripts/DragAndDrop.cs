@@ -237,6 +237,7 @@ public class DragAndDrop : MonoBehaviour
         if (snapCoroutine != null)
             StopCoroutine(snapCoroutine);
         snapCoroutine = StartCoroutine(BackToLastPosition(lastValidPosition));
+        SoundManager.Instance.PlayError(); // Hata sesi çal
     }
     
     public IEnumerator SnapToGrid()
