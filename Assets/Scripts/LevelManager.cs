@@ -20,31 +20,34 @@ public class LevelManager : MonoBehaviour
     public GameObject level;
     public Transform levelPrefabPos;
     public bool isOpenPanel;
+    public Animator boxCloseCoverAnim;
 
     private void Awake()
     {
         instance = this;
 
-        LevelCompleted += OnLevelCompleted;
+        LevelCompleted += CloseBoxCoverAnim;
     }
 
     private void OnDestroy()
     {
-        LevelCompleted -= OnLevelCompleted;
+        LevelCompleted -= CloseBoxCoverAnim;
     }
     public static void TriggerLevelCompleted()
     {
         LevelCompleted?.Invoke();
     }
-    private void OnLevelCompleted()
+    private void CloseBoxCoverAnim()
+    {
+        boxCloseCoverAnim.SetBool("isOpen", false);
+    }
+    public void OnLevelCompleted()
     {
         Debug.Log("Level tamamlandý!");
         currentLevel++;
         if (currentLevel > levelPrefabs.Count)
         {
-            Debug.Log("Tüm seviyeler tamamlandý!");
-            gameFinishedPanel.SetActive(true);
-            isOpenPanel = true;
+            currentLevel = 1; // Reset to level 1 if all levels are completed
         }
         else
         {
@@ -61,6 +64,7 @@ public class LevelManager : MonoBehaviour
         if(currentLevel==1)
         {
             level = Instantiate(levelPrefabs[currentLevel - 1], levelPrefabPos.position, Quaternion.identity);
+
             mainMenuPanel.SetActive(false);
             isOpenPanel = false;
         }
@@ -71,6 +75,8 @@ public class LevelManager : MonoBehaviour
             nextLevelPanel.SetActive(false);
             isOpenPanel = false;
         }
-
+        Transform box = level.transform.Find("Animation");
+        boxCloseCoverAnim = box.GetComponent<Animator>();
+        boxCloseCoverAnim.SetBool("isOpen", true);
     }
 }
