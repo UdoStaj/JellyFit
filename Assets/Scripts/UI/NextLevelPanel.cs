@@ -34,5 +34,6 @@ public class NextLevelPanel : MonoBehaviour
     {
         LevelManager.instance.StartLevel();
         HighlightCubes.instance.UpdateCubeList();
+        gameObject.SetActive(false);
     }
 }

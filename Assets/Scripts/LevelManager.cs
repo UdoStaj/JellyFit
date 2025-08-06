@@ -11,7 +11,7 @@ public class LevelManager : MonoBehaviour
     public static event Action LevelFailed;
     public static event Action LevelStarted;
 
-    public int currentLevel=1;
+    public int currentLevel = 1;
     public GameObject nextLevelPanel;
     public GameObject mainMenuPanel;
     public GameObject gameFinishedPanel;
@@ -48,22 +48,13 @@ public class LevelManager : MonoBehaviour
     {
         Debug.Log("Level tamamlandý!");
         currentLevel++;
-        if (currentLevel > levelPrefabs.Count)
-        {
-            currentLevel = 1; // Reset to level 1 if all levels are completed
-        }
-        else
-        {
-            nextLevelButtonText.text = "Next Level " + currentLevel;
-            nextLevelPanel.SetActive(true);
-            isOpenPanel = true;
-        }
+
         OnChangeLevel?.Invoke(currentLevel);
 
-        nextLevelButtonText.text = "Next Level:"+currentLevel;
+        nextLevelButtonText.text = "Next Level:" + currentLevel;
         nextLevelPanel.SetActive(true);
         isOpenPanel = true;
-        
+
     }
     public void ReplayButton()
     {
