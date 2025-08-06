@@ -3,12 +3,15 @@ using UnityEngine;
 
 public class ObjectPooling : MonoBehaviour
 {
-    public int highlightCount;
+    public int highlightCount,particleCount;
     public GameObject highlightPrefab;
+    public GameObject particlePrefab;
     public List<GameObject> highlightList = new List<GameObject>();
+    public List<GameObject> particleList = new List<GameObject>();
 
 
     Transform highlightParent;
+    Transform particleContainer;
 
     public static ObjectPooling Instance;
 
@@ -20,7 +23,7 @@ public class ObjectPooling : MonoBehaviour
             Destroy(gameObject);
 
         CreateParent(ref highlightParent, "HighlightContainer");
-
+        CreateParent(ref particleContainer, "ParticleContainer");
 
     }
     void CreateParent(ref Transform parent, string parentName)
@@ -35,6 +38,7 @@ public class ObjectPooling : MonoBehaviour
     private void Start()
     {
         start(highlightCount, highlightPrefab, highlightList, highlightParent);
+        start(particleCount, particlePrefab, particleList, particleContainer);
     }
     void start(int count, GameObject prefab, List<GameObject> list, Transform container)
     {
@@ -45,7 +49,15 @@ public class ObjectPooling : MonoBehaviour
             list.Add(poolObj);
         }
     }
-    
+    public GameObject GetParticle()
+    {
+        GameObject particle = get(particleList, particlePrefab);
+        return particle;
+    }
+    public void DisableParticle(GameObject particle)
+    {
+        particle.SetActive(false);
+    }
     public GameObject GetHighlight()
     {
         GameObject highlight = get(highlightList, highlightPrefab);

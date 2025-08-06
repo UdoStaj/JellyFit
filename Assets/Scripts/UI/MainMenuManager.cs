@@ -20,6 +20,9 @@ public class MainMenuManager : MonoBehaviour
     [SerializeField] private Button playButton;
     [SerializeField] private Button settingsButton;
 
+    [Header("Will Hide")]
+    [SerializeField] private Button replayButton;
+
     [Header("Texts")]
     public TMP_Text levelText;
 
@@ -32,6 +35,7 @@ public class MainMenuManager : MonoBehaviour
         homeButton.onClick.AddListener(HomeButton);
         playButton.onClick.AddListener(PlayGameButton);
         settingsButton.onClick.AddListener(SettingsButton);
+        replayButton.onClick.AddListener(ReplayButton);
     }
     private void Start()
     {
@@ -62,6 +66,7 @@ public class MainMenuManager : MonoBehaviour
     private void HomeButton()
     {
         CloseAllPanels();
+        replayButton.gameObject.SetActive(false); // Tekrar oynatma butonunu gizle
         MainMenuSoundManager.Instance.PlayClick(); // Ses efektini çal
         homePanel.SetActive(true);
     }
@@ -71,9 +76,16 @@ public class MainMenuManager : MonoBehaviour
         settingsPanel.SetActive(true);
     }
 
+    private void ReplayButton()
+    {
+        LevelManager.instance.ReplayButton();
+        MainMenuSoundManager.Instance.PlayClick(); // Ses efektini çal
+    }
+
     public void PlayGameButton()
     {
         LevelManager.instance.StartLevel();
+        replayButton.gameObject.SetActive(true);
         HighlightCubes.instance.UpdateCubeList();
         SetGameHUD(false);
         MainMenuSoundManager.Instance.PlayClick(); // Ses efektini çal

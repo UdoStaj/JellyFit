@@ -1,5 +1,6 @@
 using NUnit.Framework;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -21,6 +22,8 @@ public class LevelManager : MonoBehaviour
     public Transform levelPrefabPos;
     public bool isOpenPanel;
     public Animator boxCloseCoverAnim;
+    public Transform particleSpawnPos;
+
 
     public static event Action<int> OnChangeLevel;
 
@@ -50,7 +53,7 @@ public class LevelManager : MonoBehaviour
         currentLevel++;
 
         OnChangeLevel?.Invoke(currentLevel);
-
+        StartCoroutine(ShowLevelCompletedParticle());
         nextLevelButtonText.text = "Next Level:" + currentLevel;
         nextLevelPanel.SetActive(true);
         isOpenPanel = true;
@@ -59,6 +62,11 @@ public class LevelManager : MonoBehaviour
     public void ReplayButton()
     {
         Debug.Log("Level tekrar oynatýlýyor!");
+        if(nextLevelPanel.activeSelf)
+        {
+            currentLevel--;
+            nextLevelPanel.SetActive(false);
+        }
         //LevelFailed?.Invoke();
         StartLevel();
     }
@@ -66,7 +74,6 @@ public class LevelManager : MonoBehaviour
     {
         Debug.Log("Level baþlatýldý!");
         //LevelStarted?.Invoke();
-
         int prefabIndex = (currentLevel - 1) % levelPrefabs.Count;
 
         if (level != null)
@@ -90,5 +97,12 @@ public class LevelManager : MonoBehaviour
         Transform box = level.transform.Find("Animation");
         boxCloseCoverAnim = box.GetComponent<Animator>();
         boxCloseCoverAnim.SetBool("isOpen", true);
+    }
+    IEnumerator ShowLevelCompletedParticle()
+    {
+        GameObject particle = ObjectPooling.Instance.GetParticle();
+        particle.transform.position = particleSpawnPos.position;
+        yield return new WaitForSeconds(5f);
+        ObjectPooling.Instance.DisableParticle(particle);
     }
 }

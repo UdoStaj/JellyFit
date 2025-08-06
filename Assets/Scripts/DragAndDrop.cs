@@ -127,6 +127,7 @@ public class DragAndDrop : MonoBehaviour
             offset = Vector3.zero;
         }
         isDragging = true;
+        SoundManager.Instance.PlayDragObj(); // Drag sesi çalýnýyor
         //HighlightCubes.instance.UpdateHighlights(); // Highlight güncellemesi yapýlýyor
     }
 
@@ -261,7 +262,8 @@ public class DragAndDrop : MonoBehaviour
             yield return null;
         }
         transform.position = new Vector3(targetParentPos.x, transform.position.y, targetParentPos.z);
-        if(currentGrid.AreAllNodesFull())
+        SoundManager.Instance.PlaySnapObj(); // Snap sesi çal
+        if (currentGrid.AreAllNodesFull())
         {
             Debug.Log("All nodes are full.");
             // Burada tüm node'lar doluysa yapýlacak iþlemleri ekleyebilirsiniz(Level Completed)
