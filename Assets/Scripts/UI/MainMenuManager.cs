@@ -85,7 +85,6 @@ public class MainMenuManager : MonoBehaviour
     public void PlayGameButton()
     {
         LevelManager.instance.StartLevel();
-        replayButton.gameObject.SetActive(true);
         HighlightCubes.instance.UpdateCubeList();
         SetGameHUD(false);
         MainMenuSoundManager.Instance.PlayClick(); // Ses efektini çal
@@ -100,6 +99,7 @@ public class MainMenuManager : MonoBehaviour
 
     public void SetGameHUD(bool isActive)
     {
+        replayButton.gameObject.SetActive(!isActive);
         CloseAllPanels();
         navigationPanel.SetActive(isActive);
         backgroundPanel.SetActive(isActive);
