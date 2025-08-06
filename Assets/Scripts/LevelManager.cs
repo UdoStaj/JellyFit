@@ -45,36 +45,42 @@ public class LevelManager : MonoBehaviour
     {
         Debug.Log("Level tamamlandý!");
         currentLevel++;
-        if (currentLevel > levelPrefabs.Count)
-        {
-            currentLevel = 1; // Reset to level 1 if all levels are completed
-        }
-        else
-        {
-            nextLevelButtonText.text = "Next Level " + currentLevel;
-            nextLevelPanel.SetActive(true);
-            isOpenPanel = true;
-        }
+        nextLevelButtonText.text = "Next Level:"+currentLevel;
+        nextLevelPanel.SetActive(true);
+        isOpenPanel = true;
         
+    }
+    public void ReplayButton()
+    {
+        Debug.Log("Level tekrar oynatýlýyor!");
+        //LevelFailed?.Invoke();
+        StartLevel();
     }
     public void StartLevel()
     {
         Debug.Log("Level baþlatýldý!");
         //LevelStarted?.Invoke();
-        if(currentLevel==1)
-        {
-            level = Instantiate(levelPrefabs[currentLevel - 1], levelPrefabPos.position, Quaternion.identity);
 
+        int prefabIndex = (currentLevel - 1) % levelPrefabs.Count;
+
+        if (level != null)
+        {
+            Destroy(level);
+        }
+
+        level = Instantiate(levelPrefabs[prefabIndex], levelPrefabPos.position, Quaternion.identity);
+
+        if (currentLevel == 1)
+        {
             mainMenuPanel.SetActive(false);
-            isOpenPanel = false;
         }
         else
         {
-            Destroy(level);
-            level = Instantiate(levelPrefabs[currentLevel - 1], levelPrefabPos.position, Quaternion.identity);
             nextLevelPanel.SetActive(false);
-            isOpenPanel = false;
         }
+
+        isOpenPanel = false;
+
         Transform box = level.transform.Find("Animation");
         boxCloseCoverAnim = box.GetComponent<Animator>();
         boxCloseCoverAnim.SetBool("isOpen", true);
