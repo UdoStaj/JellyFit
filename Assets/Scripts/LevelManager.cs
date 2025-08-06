@@ -22,6 +22,9 @@ public class LevelManager : MonoBehaviour
     public bool isOpenPanel;
     public Animator boxCloseCoverAnim;
 
+    public static event Action<int> OnChangeLevel;
+
+
     private void Awake()
     {
         instance = this;
@@ -55,7 +58,8 @@ public class LevelManager : MonoBehaviour
             nextLevelPanel.SetActive(true);
             isOpenPanel = true;
         }
-        
+        OnChangeLevel?.Invoke(currentLevel);
+
     }
     public void StartLevel()
     {

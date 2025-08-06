@@ -1,3 +1,5 @@
+using System;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -7,12 +9,18 @@ public class MainMenuManager : MonoBehaviour
     [SerializeField] private GameObject shopPanel;
     [SerializeField] private GameObject rankPanel;
     [SerializeField] private GameObject homePanel;
+    [SerializeField] private GameObject navigationPanel;
+    [SerializeField] private GameObject backgroundPanel;
 
     [Header("Buttons")]
     [SerializeField] private Button shopButton;
     [SerializeField] private Button rankButton;
     [SerializeField] private Button homeButton;
     [SerializeField] private Button playButton;
+
+    [Header("Texts")]
+    public TMP_Text levelText;
+
 
 
     private void Awake()
@@ -25,6 +33,13 @@ public class MainMenuManager : MonoBehaviour
     private void Start()
     {
         HomeButton();
+        LevelManager.OnChangeLevel += UpdateLevelText;
+        UpdateLevelText(LevelManager.instance.currentLevel);
+    }
+
+    private void UpdateLevelText(int obj)
+    {
+        levelText.text = obj.ToString();
     }
 
     private void ShopButton()
@@ -45,22 +60,11 @@ public class MainMenuManager : MonoBehaviour
         homePanel.SetActive(true);
     }
 
-    public void PlayGameButton() //ToDo: level Manager'a yönlendir ve hangi levela geçeceðini o söylesin.
+    public void PlayGameButton()
     {
-        //// Örn: oyun sahnesini yükle
-        //UnityEngine.SceneManagement.SceneManager.LoadScene("GameScene");
-
-        // 1. Level verisini bul
-        /*Level targetLevel = LevelManager.Instance.currentLevel;
-
-        if (targetLevel != null)
-        {
-            LevelManager.Instance.LoadLevel(targetLevel.LevelID);
-        }
-        else
-        {
-            Debug.LogError("Level ID "+targetLevel.LevelID+" bulunamadý!");
-        }*/
+        LevelManager.instance.StartLevel();
+        HighlightCubes.instance.UpdateCubeList();
+        SetGameHUD(false);
     }
 
     private void CloseAllPanels()
@@ -68,5 +72,13 @@ public class MainMenuManager : MonoBehaviour
         shopPanel.SetActive(false);
         rankPanel.SetActive(false);
         homePanel.SetActive(false);
+    }
+
+    public void SetGameHUD(bool isActive)
+    {
+        CloseAllPanels();
+        navigationPanel.SetActive(isActive);
+        backgroundPanel.SetActive(isActive);
+        homePanel.SetActive(isActive);
     }
 }
