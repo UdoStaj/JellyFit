@@ -9,7 +9,6 @@ public class GameHudManager : MonoBehaviour
 
     [Header("UI Panells")]
     [SerializeField] private GameObject winGame;
-    [SerializeField] private GameObject loseGame;
     [SerializeField] private GameObject mainMenuPanel;
     //[SerializeField] private GameObject homePanel;
 
@@ -45,24 +44,19 @@ public class GameHudManager : MonoBehaviour
 
     private void NextLevel()
     {
-        LevelManager.Instance.NextLevel();
+        //LevelManager.Instance.NextLevel();
     }
 
     private void TryAgain()
     {
-        LevelManager.Instance.reloadLevel();
+        //LevelManager.Instance.reloadLevel();
     }
 
     public void OpenWinGamePanel()
     {
         winGame.SetActive(true);
-        loseGame.SetActive(false);
         //homePanel.SetActive(false);
     }
 
-    public void OpenLoseGamePanel()
-    {
-        loseGame.SetActive(true);
-        winGame.SetActive(false);
-    }
+    
 }
