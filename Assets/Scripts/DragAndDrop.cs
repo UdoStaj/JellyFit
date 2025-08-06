@@ -5,7 +5,7 @@ using UnityEngine;
 
 public class DragAndDrop : MonoBehaviour
 {
-    [SerializeField]private bool isDragging = false;
+    public bool isDragging = false;
     private bool isFirstFrame=true;
     private Vector3 offset;
     private Camera mainCamera;
@@ -44,11 +44,13 @@ public class DragAndDrop : MonoBehaviour
 
     public virtual void Update()
     {
-        HandleMouseInput();
+        if (!LevelManager.instance.isOpenPanel)
+            HandleMouseInput();
 
         if (isDragging)
         {
             DragObject();
+            HighlightCubes.instance.UpdateHighlights(); // Highlight güncellemesi yapýlýyor
         }
     }
 
@@ -125,6 +127,7 @@ public class DragAndDrop : MonoBehaviour
             offset = Vector3.zero;
         }
         isDragging = true;
+        HighlightCubes.instance.UpdateHighlights(); // Highlight güncellemesi yapýlýyor
     }
 
     private void StopDragging()
@@ -134,8 +137,7 @@ public class DragAndDrop : MonoBehaviour
             StopCoroutine(changeYCoroutine);
         changeYCoroutine = StartCoroutine(ChangeYPosAtDragging(currentTargetY));
         isDragging = false;
-
-        // Drop sýrasýnda hangi grid'e en yakýn olduðumuzu kontrol et
+        HighlightCubes.instance.UpdateHighlights(); // Highlight güncellemesi yapýlýyor
         FindCurrentGrid();
 
         if (IsPositionInsideGrid())

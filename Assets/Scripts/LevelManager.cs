@@ -19,6 +19,7 @@ public class LevelManager : MonoBehaviour
     public List<GameObject> levelPrefabs = new List<GameObject>();
     public GameObject level;
     public Transform levelPrefabPos;
+    public bool isOpenPanel;
 
     private void Awake()
     {
@@ -43,11 +44,13 @@ public class LevelManager : MonoBehaviour
         {
             Debug.Log("Tüm seviyeler tamamlandý!");
             gameFinishedPanel.SetActive(true);
+            isOpenPanel = true;
         }
         else
         {
             nextLevelButtonText.text = "Next Level " + currentLevel;
             nextLevelPanel.SetActive(true);
+            isOpenPanel = true;
         }
         
     }
@@ -59,12 +62,14 @@ public class LevelManager : MonoBehaviour
         {
             level = Instantiate(levelPrefabs[currentLevel - 1], levelPrefabPos.position, Quaternion.identity);
             mainMenuPanel.SetActive(false);
+            isOpenPanel = false;
         }
         else
         {
             Destroy(level);
             level = Instantiate(levelPrefabs[currentLevel - 1], levelPrefabPos.position, Quaternion.identity);
             nextLevelPanel.SetActive(false);
+            isOpenPanel = false;
         }
 
     }
