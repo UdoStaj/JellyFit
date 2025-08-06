@@ -11,12 +11,14 @@ public class MainMenuManager : MonoBehaviour
     [SerializeField] private GameObject homePanel;
     [SerializeField] private GameObject navigationPanel;
     [SerializeField] private GameObject backgroundPanel;
+    [SerializeField] private GameObject settingsPanel;
 
     [Header("Buttons")]
     [SerializeField] private Button shopButton;
     [SerializeField] private Button rankButton;
     [SerializeField] private Button homeButton;
     [SerializeField] private Button playButton;
+    [SerializeField] private Button settingsButton;
 
     [Header("Texts")]
     public TMP_Text levelText;
@@ -29,6 +31,7 @@ public class MainMenuManager : MonoBehaviour
         rankButton.onClick.AddListener(RankButton);
         homeButton.onClick.AddListener(HomeButton);
         playButton.onClick.AddListener(PlayGameButton);
+        settingsButton.onClick.AddListener(SettingsButton);
     }
     private void Start()
     {
@@ -45,19 +48,27 @@ public class MainMenuManager : MonoBehaviour
     private void ShopButton()
     {
         CloseAllPanels();
+        MainMenuSoundManager.Instance.PlayClick(); // Ses efektini çal
         shopPanel.SetActive(true);
     }
 
     private void RankButton()
     {
         CloseAllPanels();
+        MainMenuSoundManager.Instance.PlayClick(); // Ses efektini çal
         rankPanel.SetActive(true);
     }
 
     private void HomeButton()
     {
         CloseAllPanels();
+        MainMenuSoundManager.Instance.PlayClick(); // Ses efektini çal
         homePanel.SetActive(true);
+    }
+    private void SettingsButton()
+    {
+        MainMenuSoundManager.Instance.PlayClick(); // Ses efektini çal
+        settingsPanel.SetActive(true);
     }
 
     public void PlayGameButton()
@@ -65,6 +76,7 @@ public class MainMenuManager : MonoBehaviour
         LevelManager.instance.StartLevel();
         HighlightCubes.instance.UpdateCubeList();
         SetGameHUD(false);
+        MainMenuSoundManager.Instance.PlayClick(); // Ses efektini çal
     }
 
     private void CloseAllPanels()
