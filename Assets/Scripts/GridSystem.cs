@@ -19,7 +19,8 @@ public class GridSystem : MonoBehaviour
 
     public virtual void Awake()
     {
-        instance = this;
+        if (GetType() == typeof(GridSystem))
+            instance = this;
         CreateGrid();
     }
 

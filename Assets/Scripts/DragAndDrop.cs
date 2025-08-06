@@ -1,10 +1,11 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 public class DragAndDrop : MonoBehaviour
 {
-    [SerializeField]private bool isDragging = false;
+    public bool isDragging = false;
     private bool isFirstFrame=true;
     private Vector3 offset;
     private Camera mainCamera;
@@ -20,12 +21,12 @@ public class DragAndDrop : MonoBehaviour
     [SerializeField] private LayerMask draggableLayer = -1;
 
     private List<Node> previouslyOccupiedNodes = new List<Node>();
-    private GridSystem currentGrid; // Hangi grid'de olduðumuzu takip eder
+    public GridSystem currentGrid; // Hangi grid'de olduðumuzu takip eder
     private GridSystem originalGrid; // Baþlangýçta hangi grid'de olduðumuzu hatýrlar
 
     public List<GridSystem> allGrids = new List<GridSystem>();
 
-    private void Start()
+    public virtual void Start()
     {
         allGrids.Add(GridSystem.instance); // GridSystem'i listeye ekle
         allGrids.Add(BoxGridSystem.instance); // GridSystem'i listeye ekle
@@ -36,21 +37,25 @@ public class DragAndDrop : MonoBehaviour
         // Baþlangýçta hangi grid'de olduðumuzu bul
         FindCurrentGrid();
         originalGrid = currentGrid;
+        FindCurrentGrid();
+        StartSnapToGrid();
         UpdateOccupiedNodes();
     }
 
-    private void Update()
+    public virtual void Update()
     {
-        HandleMouseInput();
+        if (!LevelManager.instance.isOpenPanel)
+            HandleMouseInput();
 
         if (isDragging)
         {
             DragObject();
+            HighlightCubes.instance.UpdateHighlights(); // Highlight güncellemesi yapýlýyor
         }
     }
 
     // Objenin þu anda hangi grid'de olduðunu bulur
-    private void FindCurrentGrid()
+    public void FindCurrentGrid()
     {
         float closestDistance = float.MaxValue;
         GridSystem closestGrid = null;
@@ -122,6 +127,7 @@ public class DragAndDrop : MonoBehaviour
             offset = Vector3.zero;
         }
         isDragging = true;
+        HighlightCubes.instance.UpdateHighlights(); // Highlight güncellemesi yapýlýyor
     }
 
     private void StopDragging()
@@ -131,8 +137,7 @@ public class DragAndDrop : MonoBehaviour
             StopCoroutine(changeYCoroutine);
         changeYCoroutine = StartCoroutine(ChangeYPosAtDragging(currentTargetY));
         isDragging = false;
-
-        // Drop sýrasýnda hangi grid'e en yakýn olduðumuzu kontrol et
+        HighlightCubes.instance.UpdateHighlights(); // Highlight güncellemesi yapýlýyor
         FindCurrentGrid();
 
         if (IsPositionInsideGrid())
@@ -190,7 +195,7 @@ public class DragAndDrop : MonoBehaviour
         }
     }
     
-    private bool IsPositionInsideGrid()
+    public virtual bool IsPositionInsideGrid()
     {
         if (currentGrid == null) return false;
         
@@ -232,6 +237,7 @@ public class DragAndDrop : MonoBehaviour
         if (snapCoroutine != null)
             StopCoroutine(snapCoroutine);
         snapCoroutine = StartCoroutine(BackToLastPosition(lastValidPosition));
+        SoundManager.Instance.PlayError(); // Hata sesi çal
     }
     
     public IEnumerator SnapToGrid()
@@ -258,7 +264,8 @@ public class DragAndDrop : MonoBehaviour
         if(currentGrid.AreAllNodesFull())
         {
             Debug.Log("All nodes are full.");
-            //burada tüm node'lar doluysa yapýlacak iþlemler(level complete)
+            // Burada tüm node'lar doluysa yapýlacak iþlemleri ekleyebilirsiniz(Level Completed)
+            LevelManager.TriggerLevelCompleted();
         }
 
         snapCoroutine = null;
@@ -299,7 +306,7 @@ public class DragAndDrop : MonoBehaviour
         changeYCoroutine = null;
     }
 
-    private void UpdateOccupiedNodes()
+    public virtual void UpdateOccupiedNodes()
     {
         if (currentGrid == null) return;
         
