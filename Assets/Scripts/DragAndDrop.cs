@@ -44,13 +44,13 @@ public class DragAndDrop : MonoBehaviour
 
     public virtual void Update()
     {
-        if (!LevelManager.instance.isOpenPanel)
+        //if (!LevelManager.instance.isOpenPanel)
             HandleMouseInput();
 
         if (isDragging)
         {
             DragObject();
-            HighlightCubes.instance.UpdateHighlights(); // Highlight güncellemesi yapýlýyor
+            //HighlightCubes.instance.UpdateHighlights(); // Highlight güncellemesi yapýlýyor
         }
     }
 
@@ -127,7 +127,7 @@ public class DragAndDrop : MonoBehaviour
             offset = Vector3.zero;
         }
         isDragging = true;
-        HighlightCubes.instance.UpdateHighlights(); // Highlight güncellemesi yapýlýyor
+        //HighlightCubes.instance.UpdateHighlights(); // Highlight güncellemesi yapýlýyor
     }
 
     private void StopDragging()
@@ -137,7 +137,7 @@ public class DragAndDrop : MonoBehaviour
             StopCoroutine(changeYCoroutine);
         changeYCoroutine = StartCoroutine(ChangeYPosAtDragging(currentTargetY));
         isDragging = false;
-        HighlightCubes.instance.UpdateHighlights(); // Highlight güncellemesi yapýlýyor
+        //HighlightCubes.instance.UpdateHighlights(); // Highlight güncellemesi yapýlýyor
         FindCurrentGrid();
 
         if (IsPositionInsideGrid())

@@ -28,6 +28,7 @@ public class KnifeDragAndDrop : MonoBehaviour
         mainCamera = Camera.main;
         originalY = transform.position.y;
         lastValidPosition = transform.position;
+        StartSnapToGrid();
     }
 
     private void Update()
@@ -95,6 +96,7 @@ public class KnifeDragAndDrop : MonoBehaviour
 
         if (IsPositionInsideGrid(transform.position))
         {
+            Debug.Log("Calling SnapToGrid");
             StartSnapToGrid();
         }
         else
@@ -102,7 +104,7 @@ public class KnifeDragAndDrop : MonoBehaviour
             StartBackToLastPosition();
         }
 
-        UpdateNeighbors();
+        
     }
 
     private void DragObject()
@@ -161,24 +163,32 @@ public class KnifeDragAndDrop : MonoBehaviour
             transform.position.y,
             Mathf.Round((transform.position.z - GridSystem.instance.transform.position.z + GridSystem.instance.verticalLength / 2) / GridSystem.instance.nodeEdgeLength) * GridSystem.instance.nodeEdgeLength + GridSystem.instance.transform.position.z - GridSystem.instance.verticalLength / 2);
 
-        while (Vector3.Distance(transform.position, snapPos) > 0.05f)
+        while (Vector3.Distance(new Vector3(transform.position.x, 0, transform.position.z),
+                            new Vector3(snapPos.x, 0, snapPos.z)) > 0.05f)
         {
-            transform.position = Vector3.Lerp(transform.position, snapPos, Time.deltaTime * XZTransitionSpeed);
+            Vector3 newPos = Vector3.Lerp(transform.position, snapPos, Time.deltaTime * XZTransitionSpeed);
+            transform.position = new Vector3(newPos.x, transform.position.y, newPos.z);
             yield return null;
         }
-
-        transform.position = snapPos;
+        
+        transform.position = new Vector3(snapPos.x, transform.position.y, snapPos.z);
+        yield return null;
+        Debug.Log("UpdateNeighbors SNAP sonrası çağrılıyor");
+        UpdateNeighbors();
         lastValidPosition = transform.position;
+        
         snapCoroutine = null;
     }
 
     IEnumerator BackToLastPosition(Vector3 lastPos)
     {
+        print("back to last position coroutine started");
         while (Vector3.Distance(transform.position, lastPos) > 0.05f)
         {
             transform.position = Vector3.Lerp(transform.position, lastPos, Time.deltaTime * XZTransitionSpeed);
             yield return null;
         }
+        UpdateNeighbors();
         transform.position = lastPos;
     }
 
@@ -203,6 +213,7 @@ public class KnifeDragAndDrop : MonoBehaviour
 
     public void UpdateNeighbors()
     {
+        print("update neighbors çalıştı");
         currentNeighbors = GetNeighborsOfKnife(isHorizontal, 2, 1);
     }
 
