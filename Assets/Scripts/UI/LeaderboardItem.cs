@@ -13,7 +13,7 @@ public class LeaderboardItem : MonoBehaviour
     public TMP_Text ScoreText;
     public TMP_Text RankText;
     public Image BackgroundImage;
-    public Image glowImage;
+    public GameObject glowImage;
 
     public void SetData(int rank, string name, int score)
     {
@@ -24,8 +24,8 @@ public class LeaderboardItem : MonoBehaviour
 
         if(name == "Yomi")
         {
-            BackgroundImage.color = new Color32(49, 193, 220, 255); // Change background for "You"
-            glowImage.color = new Color32(0, 232, 255, 255); // Change glow for "You"
+            BackgroundImage.color = new Color32(255, 0, 0, 255); // Change background for "You"
+            glowImage.SetActive(true); // Show glow effect for "You"
         }
     }
 }

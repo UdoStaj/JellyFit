@@ -1,5 +1,80 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
+--- !u!1 &1741064081916755838
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 6931468692110560308}
+  - component: {fileID: 6342212685384067492}
+  - component: {fileID: 6243907794489584514}
+  m_Layer: 5
+  m_Name: Glow
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 0
+--- !u!224 &6931468692110560308
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1741064081916755838}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 1
+  m_Children: []
+  m_Father: {fileID: 5028506868345334550}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
+  m_AnchoredPosition: {x: -0.6983948, y: 4.978798}
+  m_SizeDelta: {x: 50.5156, y: 42.0449}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!222 &6342212685384067492
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1741064081916755838}
+  m_CullTransparentMesh: 1
+--- !u!114 &6243907794489584514
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1741064081916755838}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_RaycastTarget: 0
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_Sprite: {fileID: 21300000, guid: 02cde502a26be42d896a7719bd9cabfb, type: 3}
+  m_Type: 1
+  m_PreserveAspect: 0
+  m_FillCenter: 1
+  m_FillMethod: 4
+  m_FillAmount: 1
+  m_FillClockwise: 1
+  m_FillOrigin: 0
+  m_UseSpriteMesh: 0
+  m_PixelsPerUnitMultiplier: 1
 --- !u!1 &2836316584675001011
 GameObject:
   m_ObjectHideFlags: 0
@@ -449,6 +524,7 @@ GameObject:
   - component: {fileID: 5028506868345334550}
   - component: {fileID: 4117364882454019664}
   - component: {fileID: 4494570063537089070}
+  - component: {fileID: -5127075261673506617}
   m_Layer: 5
   m_Name: RankItem
   m_TagString: Untagged
@@ -473,6 +549,7 @@ RectTransform:
   - {fileID: 2352363320833699377}
   - {fileID: 6868526861430120857}
   - {fileID: 1449364235338529417}
+  - {fileID: 6931468692110560308}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -518,6 +595,35 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!114 &-5127075261673506617
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7589352059329903030}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f2c7f49cede902b4892e1f436dc3b444, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  imageList:
+  - {fileID: 21300000, guid: c92f85e24f1a24211ae37e3ed7c51408, type: 3}
+  - {fileID: 21300000, guid: f737600137a804f88a0c47baedd1ff8f, type: 3}
+  - {fileID: 21300000, guid: d80de6c210dd74ba489512ae59387812, type: 3}
+  - {fileID: 21300000, guid: b671a6842e8c144d2a0d829d543161f3, type: 3}
+  - {fileID: 21300000, guid: cf21c39427c6347bab63ccc24450ae49, type: 3}
+  - {fileID: 21300000, guid: 7a29784cb8aa14228ab86f1ad3079761, type: 3}
+  - {fileID: 21300000, guid: 6c556649b9e2743ba85b28d56d165aa2, type: 3}
+  - {fileID: 21300000, guid: 4c40c66b34f1f44a09e7275dd7b269a4, type: 3}
+  - {fileID: 21300000, guid: 90fcbbce7125942bd8e00327e9a5f7f3, type: 3}
+  - {fileID: 21300000, guid: 2614b6638b39c461b9c20e54e9a8f33c, type: 3}
+  Image: {fileID: 468668762552429537}
+  NameText: {fileID: 7860032168491555049}
+  ScoreText: {fileID: 767655010591581006}
+  RankText: {fileID: 142526923164016587}
+  BackgroundImage: {fileID: 4494570063537089070}
+  glowImage: {fileID: 1741064081916755838}
 --- !u!1 &8084971556739826403
 GameObject:
   m_ObjectHideFlags: 0

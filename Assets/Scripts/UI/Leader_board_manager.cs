@@ -68,6 +68,7 @@ public class GeneratedPlayer
 
 public class Leader_board_manager : MonoBehaviour
 {
+    public static Leader_board_manager Instance { get; private set; }
     [Header("Player Settings")]
     public LeagueType currentPlayerLeague = LeagueType.Bronze;
     public int currentPlayerMedals = 0;
@@ -87,7 +88,10 @@ public class Leader_board_manager : MonoBehaviour
     private Dictionary<LeagueType, List<PlayerData>> leagueData;
     private List<string> availableNicknames = new List<string>(); 
     private HashSet<string> usedNicknames = new HashSet<string>();
-    
+    private void Awake()
+    {
+        Instance = this;
+    }
     void Start()
     {
         Debug.Log("=== LEADERBOARD SYSTEM STARTING ===");
@@ -546,7 +550,7 @@ public class Leader_board_manager : MonoBehaviour
     
     // Test methods
     [ContextMenu("Add 10 Medals")]
-    void TestAddMedals()
+    public void TestAddMedals()
     {
         UpdatePlayerMedals(currentPlayerMedals + 10);
     }

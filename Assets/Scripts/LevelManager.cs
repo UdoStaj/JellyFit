@@ -53,6 +53,8 @@ public class LevelManager : MonoBehaviour
 
         nextLevelButtonText.text = "Next Level:" + currentLevel;
         nextLevelPanel.SetActive(true);
+        CashManager.Instance.AddCash(50);
+        Leader_board_manager.Instance.TestAddMedals();
         isOpenPanel = true;
 
     }
